@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
-  "main": "app.js",
   "scripts": {
     "start": "node app"
   },

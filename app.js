@@ -1,11 +1,24 @@
 var express = require('express')
-var app = express()
+  // , http = require('http');
+
+var app = express();
 
 app.get('/', function (req, res) {
   res.send('Hello World!')
-})
+});
 
-var server = app.listen(3000, function () {
+/*
+app.configure(function(){
+  app.set('port', process.env.PORT || 3000);
+  app.use(express.favicon());
+});
+
+http.createServer(app).listen(app.get('port'), function(){
+  console.log("Express server listening on port " + app.get('port'));
+});
+*/
+
+var server = app.listen(process.env.PORT || 3000, function () {
 
   var host = server.address().address
   var port = server.address().port
