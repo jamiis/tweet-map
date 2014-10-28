@@ -1,0 +1,22 @@
+{
+  "name": "tweet-map",
+  "version": "1.0.0",
+  "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamiis/tweet-map.git"
+  },
+  "author": "Jamis Johnson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jamiis/tweet-map/issues"
+  },
+  "homepage": "https://github.com/jamiis/tweet-map",
+  "dependencies": {
+    "express": "^4.10.0"
+  }
+}
