@@ -1,10 +1,11 @@
 {
   "name": "tweet-map",
-  "version": "1.0.0",
+  "version": "0.0.1",
+  "private": true,
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "test"
+    "start": "node app"
   },
   "repository": {
     "type": "git",
