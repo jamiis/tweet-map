@@ -4,7 +4,7 @@
   "private": true,
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
   "scripts": {
-    "start": "node app"
+    "start": "node server/app.js"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/jamiis/tweet-map",
   "dependencies": {
-    "express": "^4.10.0"
-  }
+    "express": "^4.10.0",
+    "lodash": "^2.4.1",
+    "serve-favicon": "^2.1.6",
+    "socket.io": "^1.2.0"
+  },
+  "devDependencies": {}
 }
