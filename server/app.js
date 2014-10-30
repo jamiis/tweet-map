@@ -38,8 +38,7 @@ var stream = twitter.stream('statuses/sample')
 io.sockets.on('connection', function (socket) {  
   console.log('socket connection');
   stream.on('tweet', function(tweet) {
-    console.log('tweet: ', tweet);
-    socket.emit('info', { tweet: tweet});
+    socket.emit('tweet', { tweet: tweet});
   });
 });
 
