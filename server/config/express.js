@@ -25,7 +25,7 @@ module.exports = function(app) {
 
   if ('dev' === env || 'test' === env) {
     app.use(express.static(path.join(config.root, 'client')));
-    app.set('appPath', 'client');
+    app.set('appPath', config.root + '/client');
     // TODO app.use(errorHandler()); // Error handler - has to be last
   }
 };

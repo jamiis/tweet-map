@@ -22,10 +22,11 @@ var all = {
   port: process.env.PORT || 3000,
 };
 
-// Export the config object based on the NODE_ENV
+// Export the config object based on the NODE_ENV.
+// keys.js will only exist on local env's
 // ==============================================
-module.exports = _.merge(
+module.exports = _.merge.apply(_, [
   all,
-  require('./' + process.env.NODE_ENV + '.js') || {}
-);
-
+  require('./' + process.env.NODE_ENV + '.js') || {},
+  require('./keys.js') || {}
+]);
