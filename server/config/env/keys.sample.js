@@ -6,8 +6,8 @@
 
 module.exports = {
   aws: {
-    accessKey = '',
-    accessKeySecret = ''
+    accessKey: '',
+    accessKeySecret: ''
   },
   twitter: {
     consumerKey: '',
