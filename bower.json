@@ -1,0 +1,21 @@
+{
+  "name": "tweet-map",
+  "version": "0.0.0",
+  "authors": [
+    "Jamis Johnson <jamismanwaring@gmail.com>"
+  ],
+  "main": "public/index.html",
+  "description": "a realtime tweet map to learn angular, node, express, aws beanstalk and elb, and hopefully a little coffeescript",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.0"
+  }
+}
