@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jamiis/tweet-map",
   "dependencies": {
+    "async": "^0.9.0",
     "dynamodb": "^0.3.6",
     "express": "^4.10.0",
     "jade": "^1.7.0",

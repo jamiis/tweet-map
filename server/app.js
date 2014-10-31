@@ -9,7 +9,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
 
 var express = require('express')
 var config = require('./config/env');
-
+var async = require('async')
 var _ = require('underscore')
 _.mixin(require('underscore.deep'))
 
@@ -80,28 +80,36 @@ stream.on('tweet', function(tweet) {
 })
   
 var saveTweets = function() {
-  var delay = saveTweetDelay.standard;
-
-  while (tweets.length) {
-    var tweetsChunk = tweets.splice(0,25);
-    db.batchWriteItem({'tweets': formatTweetsForDB(tweetsChunk)}, {},
-      function(err, res) {
-        if (err) { 
-          console.log('ERROR (db.batchWriteItem): ', err);
-          delay = saveTweetDelay.error;
-        } else {
-          console.log('success (db.batchWriteItem). tweets.length: ', tweets.length);
-        }
-    });
+  // wait until the number of tweets in memory exceeds dynamo's maximum batch size
+  if (tweets.length < 25) {
+    setTimeout(saveTweets, saveTweetDelay.standard);
+    return;
   }
-  setTimeout(saveTweets, delay);
+
+  // split tweets into batches of 25 for bulk writing to dynamo
+  var batches = [];
+  while (tweets.length > 25) {
+    batches.push(tweets.splice(0,25));
+  }
+
+  // async batch write to dynamo
+  function upload(batch, callback) {
+    console.log('batch size: ', batch.length);
+    db.batchWriteItem(
+      {'tweets': formatTweetsForDB(batch)}, {},
+      function(err, res) {
+        callback(err)
+      });
+  }
+
+  async.map(batches, upload, function(err, results) {
+    if (err) console.log('ERROR (db.batchWriteItem): ', err);
+    // after uploads finish, reset save-tweets timeout
+    setTimeout(saveTweets, err? saveTweetDelay.error : saveTweetDelay.standard);
+  });
 }
-var LongDelay = false;
-var isLongDelay = 6000;
-var saveTweetDelay = {
-  error: 10000,
-  standard: 1000
-}
+// begin calling saveTweets() intermittently
+var saveTweetDelay = { error: 10000, standard: 1000 };
 setTimeout(saveTweets, saveTweetDelay.standard);
 
 /* TODO momentarily comment out socket io logic
