@@ -1,9 +1,9 @@
 html
   head
-    base(href='/')
     title
+    base(href='/')
+    link(rel="stylesheet" type="text/css" href="styles/main.css" media="screen")
   body(ng-app='tweetMapApp')
-    h1 Hola Amigo!!
     div(ng-view='')
     script(src='bower_components/angular/angular.js')
     script(src='bower_components/angular-resource/angular-resource.js')
@@ -12,4 +12,7 @@ html
     script(src='bower_components/angular-route/angular-route.js')
     script(src='bower_components/socket.io-client/socket.io.js')
     script(src='bower_components/angular-socket-io/socket.js')
+    script(src='/bower_components/lodash/dist/lodash.js')
+    script(src='/bower_components/bluebird/js/browser/bluebird.js')
+    script(src='/bower_components/angular-google-maps/dist/angular-google-maps.js')
     script(src='app/app.js')

@@ -5,14 +5,17 @@
 'use strict';
 
 var errors = require('./components/errors');
+var express = require('express')
 
 module.exports = function(app) {
 
-  // define routes here
+  // partials
   app.get('/partials/:name', function (req, res) {
-      var name = req.params.name;
-      res.render(app.get('appPath') + '/app/partials/' + name);
+      res.render(app.get('appPath') + '/app/partials/' + req.params.name);
   });
+
+  // styles
+  app.use('/styles', express.static(app.get('appPath') + '/app/styles/'));
 
   // all undefined asset or api routes should return a 404
   app.route('/:url(api|auth|components|app|bower_components|assets)/*')

@@ -110,7 +110,8 @@ var saveTweets = function() {
 }
 // begin calling saveTweets() intermittently
 var saveTweetDelay = { error: 10000, standard: 1000 };
-setTimeout(saveTweets, saveTweetDelay.standard);
+// TODO momentarily comment out 
+// setTimeout(saveTweets, saveTweetDelay.standard);
 
 /* TODO momentarily comment out socket io logic
 io.sockets.on('connection', function (socket) {  
