@@ -40,7 +40,10 @@ server.listen(config.port, function() {
 
 // setup web socket
 var io = require('socket.io').listen(server);
-var stream = twitter.stream('statuses/sample')
+var stream = twitter.stream('statuses/filter', {
+  // filter on the whole world
+  locations: ['-180',-'90','180','90']
+});
 
 // TODO should only run when uploading to dynamo. move into separate script.
 // buffer tweet stream to be uploaded to dynamo
@@ -54,12 +57,32 @@ stream.on('tweet', function(tweet) {
 
 io.sockets.on('connection', function (socket) {  
   console.log('socket connected');
-  // push tweets to subscribed connections
   stream.on('tweet', function(tweet) {
-    socket.emit('tweet', { tweet: tweet});
+    // ensure tweet has location
+    if (_.property('coordinates')(tweet)) {
+      //var point = {"lat": tweet.coordinates.coordinates[0],"lng": tweet.coordinates.coordinates[1]};
+
+      // TODO
+      //socket.emit('tweet', { tweet: tweet});
+      //socket.broadcast.emit("twitter-stream", outputPoint);
+
+      // send out to web sockets channel.
+      // push tweets to members of subscribed channels
+      //socket.emit('twitter-stream', outputPoint);
+      socket.emit('tweet', tweet);
+    }
+    /*
+    if (stream === null) {
+      //Connect to twitter stream passing in filter for entire world.
+      twit.stream('statuses/filter', {'locations':'-180,-90,180,90'}, function(s) {
+        stream = s;
+        stream.on('data', function(data) {
+        });
+      });
+    });
+    */
   });
 });
-  
 // util for formatting incoming tweets
 var formatTweetsForDB = function(tweets) {
   // boss ass functional-style function to format tweets for our dynamoDB table

@@ -32,28 +32,25 @@ angular.module('tweetMapApp', [
   return socketFactory();
 })
 .controller("MapCtrl", ['$scope', 'GoogleMapApi'.ns(), 'socket', function($scope, GoogleMapApi, socket) {
-  // do stuff with your $scope
-  // it should be NOTED that some of the directives at least require something to be defined originally
-  // ie:
-  // $scope.markers = [] // and not undefined!
+  $scope.map = {};
+  $scope.markers = [];
 
-  /*
-  * GoogleMapApi is a promise with a
-  * then callback of the google.maps object
-  *   @pram: maps = google.maps
-  */
   GoogleMapApi.then(function(maps) {
     console.log('google maps api loaded');
-    // initial map position over NYC
     $scope.map = {
-        center: {
-            latitude: 40.741533, 
-            longitude: -73.989548
-        },
-        zoom: 11
+        center: { latitude: 0.0, longitude: 0.0 },
+        zoom: 2,
+        options: {}
     };
     socket.on('tweet', function (tweet) {
-      console.log(tweet);
+      // TODO this pop should not be here but markers only appear if it is
+      $scope.markers.pop();
+      $scope.markers.push({
+        latitude: tweet.coordinates.coordinates[0],
+        longitude: tweet.coordinates.coordinates[1],
+        title: tweet.text,
+        id: tweet.id
+      })
     });
   });
 }]);
