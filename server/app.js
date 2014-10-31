@@ -43,24 +43,32 @@ var io = require('socket.io').listen(server);
 var stream = twitter.stream('statuses/sample')
 
 var formatTweetsForDB = function(tweets) {
+  // boss ass functional-style function to format tweets for our dynamoDB table
   return _.chain(tweets)
-    // remove tweets that don't have db indices: id and timestamp_ms.
+    // remove tweets that don't have required db indices: id_str and timestamp_ms.
     .filter(function(t) { 
-      return !(_.has(t,'id') && _.has(t,'timestamp_ms'))
+      return (_.has(t,'id_str') && _.has(t,'timestamp_ms'))
     })
-    // flatten deeply-nested tweet object to single layer of keys.
-    .deepToFlat()
-    .pick(
-      'id',
-      'id_str',
-      'timestamp_ms',
-      'text',
-      'user.screen_name', 
-      'user.id_str', 
-      'user.follower_count', 
-      'user.friend_count')
-    // just in case: remove key-pairs with null or empty-string values.
-    .invert().omit([null,'']).invert()
+    .map(function(t) { 
+      // adjust key names
+      t.id = t.id_str
+      t.user.id = t.user.id_str
+
+      return _.chain(t)
+      // flatten deeply-nested tweet object to single layer of keys.
+      .deepToFlat()
+      .pick(
+        'id',
+        'timestamp_ms',
+        'text',
+        'user.screen_name', 
+        'user.id', 
+        'user.follower_count', 
+        'user.friend_count')
+      // just in case: remove key-pairs with null or empty-string values.
+      .invert().omit([null,'']).invert()
+      .value();
+    })
     .value();
 }
 
@@ -72,25 +80,29 @@ stream.on('tweet', function(tweet) {
 })
   
 var saveTweets = function() {
-  console.log('saveTweets called');
-  if (tweets.length > 0) {
-    db.batchWriteItem({'tweets': formatTweetsForDB(tweets.slice(0,25))}, {},
+  var delay = saveTweetDelay.standard;
+
+  while (tweets.length) {
+    var tweetsChunk = tweets.splice(0,25);
+    db.batchWriteItem({'tweets': formatTweetsForDB(tweetsChunk)}, {},
       function(err, res) {
-        if (err)
-          console.log('BATCH WRITE ERROR: ', err);
-        else {
-          console.log('BATCH WRITE SUCCESS');
-          //console.log('size of batch: ', tweets.length);
-          console.log(res);
+        if (err) { 
+          console.log('ERROR (db.batchWriteItem): ', err);
+          delay = saveTweetDelay.error;
+        } else {
+          console.log('success (db.batchWriteItem). tweets.length: ', tweets.length);
         }
-        // reset list of tweets
-        tweets = [];
     });
   }
-  setTimeout(saveTweets, saveTweetDelay);
+  setTimeout(saveTweets, delay);
 }
-var saveTweetDelay = 500;
-setTimeout(saveTweets, saveTweetDelay);
+var LongDelay = false;
+var isLongDelay = 6000;
+var saveTweetDelay = {
+  error: 10000,
+  standard: 1000
+}
+setTimeout(saveTweets, saveTweetDelay.standard);
 
 /* TODO momentarily comment out socket io logic
 io.sockets.on('connection', function (socket) {  
