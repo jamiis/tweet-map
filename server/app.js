@@ -38,10 +38,29 @@ server.listen(config.port, function() {
   console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
 });
 
-// setup socket.io
+// setup web socket
 var io = require('socket.io').listen(server);
 var stream = twitter.stream('statuses/sample')
 
+// TODO should only run when uploading to dynamo. move into separate script.
+// buffer tweet stream to be uploaded to dynamo
+/*
+var tweets = [];
+stream.on('tweet', function(tweet) {
+  // add tweet to batch of tweets to be sent to db
+  tweets.push(tweet);
+})
+*/
+
+io.sockets.on('connection', function (socket) {  
+  console.log('socket connected');
+  // push tweets to subscribed connections
+  stream.on('tweet', function(tweet) {
+    socket.emit('tweet', { tweet: tweet});
+  });
+});
+  
+// util for formatting incoming tweets
 var formatTweetsForDB = function(tweets) {
   // boss ass functional-style function to format tweets for our dynamoDB table
   return _.chain(tweets)
@@ -72,13 +91,6 @@ var formatTweetsForDB = function(tweets) {
     .value();
 }
 
-var tweets = [];
-stream.on('tweet', function(tweet) {
-  // add tweet to batch of tweets to be sent to db
-  tweets.push(tweet);
-  //socket.emit('tweet', { tweet: tweet});
-})
-  
 var saveTweets = function() {
   // wait until the number of tweets in memory exceeds dynamo's maximum batch size
   if (tweets.length < 25) {
@@ -112,12 +124,6 @@ var saveTweets = function() {
 var saveTweetDelay = { error: 10000, standard: 1000 };
 // TODO momentarily comment out 
 // setTimeout(saveTweets, saveTweetDelay.standard);
-
-/* TODO momentarily comment out socket io logic
-io.sockets.on('connection', function (socket) {  
-  console.log('socket connection');
-});
-*/
 
 // expose app
 exports = module.exports = app;

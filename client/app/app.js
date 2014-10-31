@@ -28,10 +28,10 @@ angular.module('tweetMapApp', [
     libraries: 'weather,geometry,visualization'
   });
 }])
-.factory('socket', function (socketFactory) {
+.factory('socket', function(socketFactory) {
   return socketFactory();
 })
-.controller("MapCtrl",['$scope', 'GoogleMapApi'.ns(), function ($scope, GoogleMapApi, socket) {
+.controller("MapCtrl", ['$scope', 'GoogleMapApi'.ns(), 'socket', function($scope, GoogleMapApi, socket) {
   // do stuff with your $scope
   // it should be NOTED that some of the directives at least require something to be defined originally
   // ie:
@@ -44,17 +44,16 @@ angular.module('tweetMapApp', [
   */
   GoogleMapApi.then(function(maps) {
     console.log('google maps api loaded');
+    // initial map position over NYC
     $scope.map = {
         center: {
-            latitude: 45,
-            longitude: -73
+            latitude: 40.741533, 
+            longitude: -73.989548
         },
-        zoom: 8
+        zoom: 11
     };
-    /*
     socket.on('tweet', function (tweet) {
       console.log(tweet);
     });
-    */
   });
 }]);
