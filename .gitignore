@@ -1,6 +1,10 @@
-.elasticbeanstalk/
 node_modules
 *.swp
 todo
 client/bower_components/*
 server/config/env/keys.js
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
