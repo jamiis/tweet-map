@@ -24,6 +24,6 @@
     "angular": "~1.3.0",
     "angular-socket-io": "~0.6.0",
     "socket.io-client": "~1.2.0",
-    "angular-google-maps": "~2.0.6"
+    "angular-google-maps": "~2.0.9"
   }
 }

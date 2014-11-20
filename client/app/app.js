@@ -6,7 +6,7 @@ angular.module('tweetMapApp', [
   'ngSanitize',
   'ngRoute',
   'btford.socket-io',
-  'google-maps'.ns()
+  'uiGmapgoogle-maps'
 ])
 .config(function ($routeProvider, $locationProvider) {
   $routeProvider
@@ -20,22 +20,21 @@ angular.module('tweetMapApp', [
 
   $locationProvider.html5Mode(true);
 })
-//'GoogleMapApiProvider'.ns() == 'uiGmapGoogleMapApiProvider'
-.config(['GoogleMapApiProvider'.ns(), function (GoogleMapApi) {
-  GoogleMapApi.configure({
+.config(function (uiGmapGoogleMapApiProvider) {
+  uiGmapGoogleMapApiProvider.configure({
     // TODO key: 'your api key',
     v: '3.17',
     libraries: 'weather,geometry,visualization'
   });
-}])
+})
 .factory('socket', function(socketFactory) {
   return socketFactory();
 })
-.controller("MapCtrl", ['$scope', 'GoogleMapApi'.ns(), 'socket', function($scope, GoogleMapApi, socket) {
+.controller("MapCtrl", function($scope, uiGmapGoogleMapApi, socket) {
   $scope.map = {};
   $scope.markers = [];
 
-  GoogleMapApi.then(function(maps) {
+  uiGmapGoogleMapApi.then(function(maps) {
     console.log('google maps api loaded');
     $scope.map = {
         center: { latitude: 0.0, longitude: 0.0 },
@@ -44,13 +43,9 @@ angular.module('tweetMapApp', [
     };
     socket.on('tweet', function (tweet) {
       // TODO this pop should not be here but markers only appear if it is
-      $scope.markers.pop();
-      $scope.markers.push({
-        latitude: tweet.coordinates.coordinates[0],
-        longitude: tweet.coordinates.coordinates[1],
-        title: tweet.text,
-        id: tweet.id
-      })
+      //$scope.markers.pop();
+      console.log('tweet ', tweet);
+      $scope.markers.push(tweet);
     });
   });
-}]);
+});

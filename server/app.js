@@ -60,27 +60,17 @@ io.sockets.on('connection', function (socket) {
   stream.on('tweet', function(tweet) {
     // ensure tweet has location
     if (_.property('coordinates')(tweet)) {
-      //var point = {"lat": tweet.coordinates.coordinates[0],"lng": tweet.coordinates.coordinates[1]};
-
-      // TODO
-      //socket.emit('tweet', { tweet: tweet});
-      //socket.broadcast.emit("twitter-stream", outputPoint);
-
-      // send out to web sockets channel.
-      // push tweets to members of subscribed channels
-      //socket.emit('twitter-stream', outputPoint);
+      var tweet = {
+        latitude: tweet.coordinates.coordinates[0],
+        longitude: tweet.coordinates.coordinates[1],
+        title: tweet.text,
+        id: tweet.id
+      };
       socket.emit('tweet', tweet);
+      console.log('tweet', tweet)
+      debugger;
+      //socket.broadcast.emit("twitter-stream", outputPoint);
     }
-    /*
-    if (stream === null) {
-      //Connect to twitter stream passing in filter for entire world.
-      twit.stream('statuses/filter', {'locations':'-180,-90,180,90'}, function(s) {
-        stream = s;
-        stream.on('data', function(data) {
-        });
-      });
-    });
-    */
   });
 });
 // util for formatting incoming tweets
