@@ -3,6 +3,7 @@ node_modules
 todo
 client/bower_components/*
 *.env
+*.log
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

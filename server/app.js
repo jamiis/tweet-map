@@ -14,22 +14,21 @@ var _ = require('underscore')
 _.mixin(require('underscore.deep'))
 
 var db = require('dynamodb').ddb({
-    accessKeyId: config.aws.key,
-    secretAccessKey: config.aws.keySecret
+  accessKeyId: config.keys.aws.key,
+  secretAccessKey: config.keys.aws.keySecret
 });
 
 // setup and auth twitter
 var twit = require('twit')
 var twitter = new twit({
-  consumer_key: config.twitter.key,
-  consumer_secret: config.twitter.keySecret,
-  access_token: config.twitter.token,
-  access_token_secret: config.twitter.tokenSecret
+  consumer_key: config.keys.twitter.key,
+  consumer_secret: config.keys.twitter.keySecret,
+  access_token: config.keys.twitter.token,
+  access_token_secret: config.keys.twitter.tokenSecret
 });
 
 // setup server
 var app = express();
-debugger;
 var server = require('http').createServer(app)
 require('./config/express')(app);
 require('./routes')(app);
