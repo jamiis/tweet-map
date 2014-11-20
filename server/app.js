@@ -5,7 +5,7 @@
 'use strict';
 
 // set default node env to dev
-process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
+process.env.NODE_ENV = process.env.NODE_ENV || 'prod';
 
 var express = require('express')
 var config = require('./config/env');
@@ -14,21 +14,22 @@ var _ = require('underscore')
 _.mixin(require('underscore.deep'))
 
 var db = require('dynamodb').ddb({
-    accessKeyId: config.aws.accessKey,
-    secretAccessKey: config.aws.accessKeySecret
+    accessKeyId: config.aws.key,
+    secretAccessKey: config.aws.keySecret
 });
 
 // setup and auth twitter
 var twit = require('twit')
-var twitter = new twit({  
-  consumer_key: config.twitter.consumerKey,
-  consumer_secret: config.twitter.consumerSecret,
-  access_token: config.twitter.accessToken,
-  access_token_secret: config.twitter.accessTokenSecret
+var twitter = new twit({
+  consumer_key: config.twitter.key,
+  consumer_secret: config.twitter.keySecret,
+  access_token: config.twitter.token,
+  access_token_secret: config.twitter.tokenSecret
 });
 
 // setup server
 var app = express();
+debugger;
 var server = require('http').createServer(app)
 require('./config/express')(app);
 require('./routes')(app);

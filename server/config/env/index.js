@@ -19,14 +19,13 @@ var all = {
   root: path.normalize(__dirname + '/../../..'),
 
   // server port
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3000
 };
 
 // Export the config object based on the NODE_ENV.
-// keys.js will only exist on local env's
 // ==============================================
 module.exports = _.merge.apply(_, [
   all,
-  require('./' + process.env.NODE_ENV + '.js') || {},
+  require('./'+ all.env +'.js') || {},
   require('./keys.js') || {}
 ]);

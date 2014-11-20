@@ -4,7 +4,8 @@
   "private": true,
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
   "scripts": {
-    "start": "node server/app.js"
+    "start": "node server/app.js",
+    "dev": "NODE_ENV=dev node server/app.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
     "express": "^4.10.0",
     "jade": "^1.7.0",
     "lodash": "^2.4.1",
+    "node-env-file": "^0.1.4",
     "serve-favicon": "^2.1.6",
     "socket.io": "^1.2.0",
     "twit": "^1.1.18",

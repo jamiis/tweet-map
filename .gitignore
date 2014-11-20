@@ -2,7 +2,7 @@ node_modules
 *.swp
 todo
 client/bower_components/*
-server/config/env/keys.js
+*.env
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
