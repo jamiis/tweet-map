@@ -5,7 +5,8 @@
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
   "scripts": {
     "start": "node server/app.js",
-    "dev": "NODE_ENV=dev node server/app.js"
+    "dev": "NODE_ENV=dev node server/app.js",
+    "debug": "NODE_ENV=dev node debug server/app.js"
   },
   "repository": {
     "type": "git",
