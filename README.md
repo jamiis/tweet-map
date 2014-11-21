@@ -1,11 +1,20 @@
-Jamis Johnson jmj2180@columbia.edu
-Nick DeGiacomo ndd2122@columbia.edu
+Jamis Johnson (jmj2180@columbia.edu) and
+Nick DeGiacomo (ndd2122@columbia.edu)
 
-Cloud Computing and Big Data
+Cloud Computing and Big Data,
+Columbia University,
 October 30, 2014
 
-github: https://github.com/jamiis/tweet-map
+A tweet map using AWS dynamoDB, elastic beanstalk and elb, 
+the google maps javascript API, node and express, 
+and web sockets.
 
-A simple tweet map app to further expose myself to AWS beanstalk 
-and elb, as well as a express, angular, bower, express, node, 
-coffeescript, etc.
+Deployed: [twitter-map-prod.elasticbeanstalk.com](http://twitter-map-prod.elasticbeanstalk.com)
+
+###Screenshots
+
+![](http://i.imgur.com/epD6Fum.jpg)
+
+![](http://i.imgur.com/CW3tNIl.jpg)
+
+![](http://i.imgur.com/BztPTes.jpg)
