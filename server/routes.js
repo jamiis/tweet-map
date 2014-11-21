@@ -15,7 +15,9 @@ module.exports = function(app) {
   });
 
   // styles
-  app.use('/styles', express.static(app.get('appPath') + '/app/styles/'));
+  app.use('/css', express.static(app.get('appPath') + '/app/css/'));
+  app.use('/js', express.static(app.get('appPath') + '/app/js/'));
+  app.use('/img', express.static(app.get('appPath') + '/app/img/'));
 
   // all undefined asset or api routes should return a 404
   app.route('/:url(api|auth|components|app|bower_components|assets)/*')

@@ -29,15 +29,18 @@ function onload() {
   var socket = io.connect();
 
   socket.on('tweet', function (tweet) {
-    // TODO this pop should not be here but markers only appear if it is
-    //$scope.markers.pop();
-
-    console.log('tweet ', tweet);
-
     // add tweet location to heatmap layer
     var loc = new google.maps.LatLng(tweet.lng, tweet.lat);
     tweets.push(loc);
 
-    // TODO ping map for 500ms with tweet location
+    // display dot on the map for 500ms
+    var marker = new google.maps.Marker({
+      position: loc,
+      map: map,
+      icon: "img/dot.png"
+    });
+    setTimeout(function(){
+      marker.setMap(null);
+    },500);
   });
 }
