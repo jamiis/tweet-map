@@ -61,14 +61,13 @@ io.sockets.on('connection', function (socket) {
     // ensure tweet has location
     if (_.property('coordinates')(tweet)) {
       var tweet = {
-        latitude: tweet.coordinates.coordinates[0],
-        longitude: tweet.coordinates.coordinates[1],
-        title: tweet.text,
-        id: tweet.id
+        lat     : tweet.coordinates.coordinates[0],
+        lng     : tweet.coordinates.coordinates[1],
+        title   : tweet.text,
+        id      : tweet.id
       };
       socket.emit('tweet', tweet);
       console.log('tweet', tweet)
-      debugger;
       //socket.broadcast.emit("twitter-stream", outputPoint);
     }
   });

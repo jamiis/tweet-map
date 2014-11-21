@@ -1,2 +1,12 @@
-#{'ui-gmap-google-map'}(center="map.center" zoom="map.zoom" options="map.options")
-  #{'ui-gmap-markers'}(models="markers" coords="'self'" icon="'icon'")
+#{'ui-gmap-google-map'}(
+  center="map.center"
+  zoom="map.zoom"
+  options="map.options"
+)
+  #{'ui-gmap-layer'}(
+    type="HeatmapLayer"
+    namespace="visualization"
+    show="map.heat.show"
+    options="map.heat.options"
+    onCreated="map.heat.onCreated"
+  )
