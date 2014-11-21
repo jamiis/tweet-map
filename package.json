@@ -4,7 +4,7 @@
   "private": true,
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
   "scripts": {
-    "postinstall": "node_modules/bower/bin/bower install -F",
+    "prepublish": "node_modules/bower/bin/bower install",
     "start": "node server/app.js",
     "dev": "NODE_ENV=dev node server/app.js",
     "debug": "NODE_ENV=dev node debug server/app.js"
