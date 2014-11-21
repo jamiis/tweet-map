@@ -4,6 +4,7 @@
   "private": true,
   "description": "A basic tweet map to learn aws elastic beanstalk and elb, and coffeescript and express.",
   "scripts": {
+    "postinstall": "node_modules/bower/bin/bower install -F",
     "start": "node server/app.js",
     "dev": "NODE_ENV=dev node server/app.js",
     "debug": "NODE_ENV=dev node debug server/app.js"
@@ -20,6 +21,7 @@
   "homepage": "https://github.com/jamiis/tweet-map",
   "dependencies": {
     "async": "^0.9.0",
+    "bower": "^1.3.12",
     "dynamodb": "^0.3.6",
     "express": "^4.10.0",
     "jade": "^1.7.0",
