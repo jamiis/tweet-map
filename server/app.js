@@ -67,8 +67,9 @@ io.sockets.on('connection', function (socket) {
         id      : tweet.id
       };
       socket.emit('tweet', tweet);
-      console.log('tweet', tweet)
-      //socket.broadcast.emit("twitter-stream", outputPoint);
+      if (config.env == 'dev') {
+        console.log('tweet', tweet);
+      }
     }
   });
 });
