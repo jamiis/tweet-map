@@ -14,18 +14,14 @@ module.exports = function(app) {
 
   app.set('views', config.root + '/server/views');
   app.set('view engine', 'jade');
-  
+  app.use(express.static(path.join(config.root, 'client')));
+  app.set('appPath', config.root + '/client');
+
   if ('prod' === env) {
-    /* TODO
-    app.use(favicon(path.join(config.root, 'public', 'favicon.ico')));
-    app.use(express.static(path.join(config.root, 'public')));
-    app.set('appPath', config.root + '/public');
-    */
+    // TODO app.use(favicon(path.join(config.root, 'public', 'favicon.ico')));
   }
 
-  if ('dev' === env || 'test' === env) {
-    app.use(express.static(path.join(config.root, 'client')));
-    app.set('appPath', config.root + '/client');
+  if ('dev' === env) {
     // TODO app.use(errorHandler()); // Error handler - has to be last
   }
 };
