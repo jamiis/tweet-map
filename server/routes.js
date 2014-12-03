@@ -19,6 +19,12 @@ module.exports = function(app) {
   app.use('/js', express.static(app.get('appPath') + '/app/js/'));
   app.use('/img', express.static(app.get('appPath') + '/app/img/'));
 
+  // update twitter stream word filter
+  app.route('/filter/:words')
+    .post(function(req, res) {
+      app.get('twitter').updateFilter(req.params.words);
+    });
+
   // all undefined asset or api routes should return a 404
   app.route('/:url(api|auth|components|app|bower_components|assets)/*')
     .get(errors[404]);

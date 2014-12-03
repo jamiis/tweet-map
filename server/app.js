@@ -18,31 +18,23 @@ var db = require('dynamodb').ddb({
   secretAccessKey: config.keys.aws.keySecret
 });
 
-// setup and auth twitter
-var twit = require('twit')
-var twitter = new twit({
-  consumer_key: config.keys.twitter.key,
-  consumer_secret: config.keys.twitter.keySecret,
-  access_token: config.keys.twitter.token,
-  access_token_secret: config.keys.twitter.tokenSecret
-});
-
 // setup server
 var app = express();
 var server = require('http').createServer(app)
+app.set('server', server);
+app.set('config', config);
 require('./config/express')(app);
-require('./routes')(app);
-
-// start server
-server.listen(config.port, function() {
-  console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
-});
 
 // setup web socket
-var io = require('socket.io').listen(server);
-var stream = twitter.stream('statuses/filter', {
-  // filter on the whole world
-  locations: ['-180',-'90','180','90']
+// TODO can I do socket.listen before server is listening?
+var io = require('socket.io').listen(server)
+app.set('io', io);
+require('./tweets')(app);
+
+// start server 
+require('./routes')(app);
+server.listen(config.port, function() {
+  console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
 });
 
 // TODO should only run when uploading to dynamo. move into separate script.
@@ -55,24 +47,6 @@ stream.on('tweet', function(tweet) {
 })
 */
 
-io.sockets.on('connection', function (socket) {  
-  console.log('socket connected');
-  stream.on('tweet', function(tweet) {
-    // ensure tweet has location
-    if (_.property('coordinates')(tweet)) {
-      var tweet = {
-        lat     : tweet.coordinates.coordinates[0],
-        lng     : tweet.coordinates.coordinates[1],
-        title   : tweet.text,
-        id      : tweet.id
-      };
-      socket.emit('tweet', tweet);
-      if (config.env == 'dev') {
-        console.log('tweet', tweet);
-      }
-    }
-  });
-});
 // util for formatting incoming tweets
 var formatTweetsForDB = function(tweets) {
   // boss ass functional-style function to format tweets for our dynamoDB table

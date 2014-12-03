@@ -3,3 +3,9 @@ html, body, #map {
   margin: 0px;
   padding: 0px
 }
+#filter {
+  position: absolute;
+  z-index: 10;
+  left: 140;
+  top: 25px;
+}

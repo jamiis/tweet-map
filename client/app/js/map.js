@@ -43,4 +43,22 @@ function onload() {
       marker.setMap(null);
     },500);
   });
+
+  document.getElementById("filter").addEventListener("keydown", function(ev) {
+    // when the user hits enter
+    if (ev.keyCode == 13) {
+      // format filter string before sending to server
+      var words = _(this.value.split(" ")).compact().join(",");
+      console.log(words);
+      $.ajax('/filter/' + words, {
+        type: 'POST',
+        success: function(data, textStatus, jqXHR ) {
+          console.log('success ', data, textStatus, jqXHR);
+        },
+        error: function(jqXHR, textStatus, error) {
+          console.log(textStatus, error);
+        }
+      });
+    }
+  }, false);
 }
