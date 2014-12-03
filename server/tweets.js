@@ -31,12 +31,6 @@ module.exports = function(app) {
       // short circuit
       if (!twitter.socket) return;
 
-      // setup stream to listen for tweets
-      console.log('listenForTweets');
-
-      //if (!twitter.stream) debugger;
-
-      console.log('twitter.stream.params: ', twitter.stream.params);
       twitter.stream.on('tweet', function(tweet) {
         // ensure tweet has location
         if (_.property('coordinates')(tweet)) {
@@ -46,10 +40,9 @@ module.exports = function(app) {
             title   : tweet.text,
             id      : tweet.id
           };
-          //console.log('TWITTER', twitter);
           twitter.socket.emit('tweet', tweet);
           if (config.env == 'dev') {
-            console.log('tweet', tweet);
+            //console.log('tweet', tweet);
           }
         }
       });
@@ -61,7 +54,6 @@ module.exports = function(app) {
       // new words filter based on previous stream filter
       var filter = twitter.stream.params;
       words ? filter.track = words: delete filter.track
-      //console.log('FILTER ', filter);
 
       // create new stream object
       var newStream = twitt.stream('statuses/filter', filter);
