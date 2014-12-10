@@ -20,5 +20,10 @@ module.exports = {
       token         : process.env.TWITTER_ACCESS_TOKEN,
       tokenSecret   : process.env.TWITTER_ACCESS_TOKEN_SECRET
     }
+  },
+  urls: {
+    sqs: {
+      tweetMap      : process.env.AWS_SQS_TWEET_MAP_QUEUE_URL
+    }
   }
 };
