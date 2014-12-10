@@ -4,6 +4,7 @@ todo
 client/bower_components/*
 *.env
 *.log
+*.js
 
 # Elastic Beanstalk Files
 .ebextensions/*
