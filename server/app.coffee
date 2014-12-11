@@ -8,9 +8,10 @@ process.env.NODE_ENV = process.env.NODE_ENV or "prod"
 cluster = require("cluster")
 config = require("./config/env")
 _ = require("underscore")
+
+# ... cluster management ... //
 if cluster.isMaster
   
-  # ... cluster management ... //
   workers = {}
   cpus = require("os").cpus().length
   spawn = ->
@@ -18,18 +19,14 @@ if cluster.isMaster
     workers[worker.pid] = worker
     worker
 
-  # spawn 1 worker per cpu
-  # TODO -1?
-  _.each _.range(cpus), spawn
+  # spawn 1 worker per available cpu
+  spawn for cpu in [1..cpus-1]
   
   # respawn worker on death
   cluster.on "death", (worker) ->
     console.log "worker " + worker.pid + " died. spawning a new process..."
     delete workers[worker.pid]
-
-    spawn()
-    return
-
+    spawn
   
   # ... server setup ... //
   express = require("express")
@@ -49,14 +46,17 @@ if cluster.isMaster
   server.listen config.port, ->
     console.log "server listening on %d, in %s mode", config.port, app.get("env")
     return
-
   
   # expose app
   exports = module.exports = app
+
+
+# ... worker process ... //
+###
 else
+
   console.log "worker process started"
   
-  # ... worker process ... //
   aws = require("aws-sdk")
   _.extend aws.config,
     region: "us-east-1"
@@ -76,36 +76,30 @@ else
       console.log "rec msg"
       if err
         console.log "error receiving sqs msg", err, err.stack
-      else
-        if _.has(data, "Messages")
-          msgs = data.Messages
-          console.log "success. num message: ", msgs.length
-          
-          # foreach message received ...
-          _.each data.Messages, (msg) ->
-            console.log "msg: ", msg
-            
-            # TODO get sentiment from alchemy api
-            
-            # delete message from queue
-            deleteOpts =
-              QueueUrl: config.urls.sqs.tweetMap
-              ReceiptHandle: msg.ReceiptHandle
+        return
 
-            sqs.deleteMessage deleteOpts, (err, data) ->
-              if err
-                console.log "error deleting sqs msg ", err, err.stack
-              else # TODO should be moved inside alchemy api callback
-                pollSqs()
+      # no messages in queue, long poll again
+      if not data.Messages?
+        pollSqs()
+        return
+
+      console.log "success. num message: ", data.Messages.length
+      
+      # foreach message received ...
+      for msg in data.Messages
+        console.log "msg: ", msg
+        
+        # TODO get sentiment from alchemy api
+        
+        sqs.deleteMessage
+          QueueUrl: config.urls.sqs.tweetMap
+          ReceiptHandle: msg.ReceiptHandle
+          (err, data) ->
+            if err
+              console.log "error deleting sqs msg ", err, err.stack
               return
 
-            return
-
-        
-        # no messages in queue, long poll again
-        else
-          pollSqs()
-      return
-
-    return
+            # TODO should be moved inside alchemy api callback
+            pollSqs()
   )()
+###

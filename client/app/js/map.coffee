@@ -1,4 +1,4 @@
-onload = ->
+this.initMap = ->
   lightGreyStyle = [
     {
       featureType: "landscape"
@@ -113,18 +113,16 @@ onload = ->
       ]
     }
   ]
-  mapOptions =
+  map = new google.maps.Map document.getElementById("map"),
     zoom: 2
     center: new google.maps.LatLng(0.0, 0.0)
     styles: lightGreyStyle
-
-  map = new google.maps.Map(document.getElementById("map"), mapOptions)
   tweets = new google.maps.MVCArray()
-  heatmap = new google.maps.visualization.HeatmapLayer(
+  heatmap = new google.maps.visualization.HeatmapLayer
     data: tweets
     radius: 25
-  )
   heatmap.setMap map
+
   socket = io.connect()
   socket.on "tweet", (tweet) ->
     
@@ -164,4 +162,5 @@ onload = ->
 
     return
   ), false
+
   return
