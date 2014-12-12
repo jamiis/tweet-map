@@ -35,10 +35,10 @@ formatTweetsForDB = (tweets) ->
     t.user.id = t.user.id_str
     # flatten deeply-nested tweet object to single layer of keys.
     _.chain(t).deepToFlat().pick(
-        "id", "timestamp_ms", "text",
-        "user.screen_name", "user.id",
-        "user.follower_count", "user.friend_count",
-        "coordinates.coordinates", "place"
+      "id", "timestamp_ms", "text",
+      "user.screen_name", "user.id",
+      "user.follower_count", "user.friend_count",
+      "coordinates.coordinates", "place"
     # just in case: remove key-pairs with null or empty-string values.
     ).invert().omit([null, ""]).invert().value()
   ).value()
@@ -73,7 +73,11 @@ batchProcessTweets = ->
           QueueUrl: config.urls.sqs.tweetMap
           Entries: (
             Id: tweet.id.toString()
-            MessageBody: tweet.text
+            MessageBody: JSON.stringify
+              lat   : tweet.coordinates.coordinates[0]
+              lng   : tweet.coordinates.coordinates[1]
+              text  : tweet.text
+              id    : tweet.id
           ) for tweet in batch,
           (err, data) -> mapCallback(err)
       (err, _) -> callback(err)
@@ -121,16 +125,6 @@ module.exports = (app) ->
       twitter.stream.on "tweet", (tweet) ->
         # if (config.env == 'dev') console.log('tweet', tweet);
         tweetsQueue.push tweet if tweet.coordinates?
-
-        ###
-        # TODO remove emit
-        if tweet.coordinates?
-          twitter.socket.emit 'tweet',
-            lat     : tweet.coordinates.coordinates[0]
-            lng     : tweet.coordinates.coordinates[1]
-            title   : tweet.text
-            id      : tweet.id
-        ###
 
     updateFilter: (words) ->
       # short circuit

@@ -23,3 +23,5 @@ module.exports =
   urls:
     sqs:
       tweetMap: process.env.AWS_SQS_TWEET_MAP_QUEUE_URL
+    sns:
+      tweetsWithSentiment: process.env.AWS_SNS_TOPIC_ARN_TWEETS_WITH_SENTIMENT

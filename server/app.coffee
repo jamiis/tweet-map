@@ -7,6 +7,7 @@ Main application file
 process.env.NODE_ENV = process.env.NODE_ENV or "prod"
 cluster = require "cluster"
 config = require "./config/env"
+http = require "http"
 _ = require "underscore"
 
 aws = require "aws-sdk"
@@ -38,7 +39,7 @@ if cluster.isMaster
   # ... server setup ... //
   express = require("express")
   app = express()
-  server = require("http").createServer(app)
+  server = http.createServer(app)
   app.set "server", server
   app.set "config", config
   require("./config/express") app
@@ -64,10 +65,10 @@ if cluster.isMaster
 else
 
   console.log "worker process started"
-  
+
   sqs = new aws.SQS()
   sns = new aws.SNS()
-  
+
   # begin polling sqs for tweets
   (pollSqs = ->
     receiveOpts =
@@ -75,7 +76,6 @@ else
       WaitTimeSeconds: 20 # max = 20 seconds
 
     sqs.receiveMessage receiveOpts, (err, data) ->
-      console.log "rec msg"
       if err
         console.log "error receiving sqs msg", err, err.stack
         return
@@ -85,18 +85,35 @@ else
         pollSqs()
         return
 
-      console.log "num messages: ", data.Messages.length
-      
       for msg in data.Messages
         console.log "msg.Body: ", msg.Body
         
         # TODO get sentiment from alchemy api
         
+        # TODO put in alchemy callback
+        if config.env isnt "dev"
+          # use sns only in prod env
+          sns.sendMessage
+            Message: "testies"
+            TopicArn: config.urls.sns.tweetsWithSentiment
+          (err, data) -> if err then console.log err
+        else
+          payload = msg.Body
+          opts =
+            path: '/receive', port: 3000, method: 'POST'
+            headers:
+              'Content-Type': 'application/json'
+              'Content-Length': Buffer.byteLength payload
+          req = http.request opts, ->
+          req.on "error", (err) -> console.log err
+          req.end payload
+
+        # remove tweet from queue
         sqs.deleteMessage
           QueueUrl: config.urls.sqs.tweetMap
           ReceiptHandle: msg.ReceiptHandle
           (err, data) ->
-            console.log "error deleting sqs msg ", err, err.stack if err
+            console.log err, err.stack if err
             # TODO should be moved inside alchemy api callback
             pollSqs()
   )()
