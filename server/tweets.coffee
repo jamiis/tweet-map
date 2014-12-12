@@ -6,17 +6,20 @@ Twitter connection handling
 # setup and auth twitter
 async = require "async"
 config = require "./config/env"
-_ = require("underscore").mixin(require("underscore.deep"))
+_ = require("underscore")
+_.mixin require "underscore.deep"
 db = require("dynamodb").ddb(
   accessKeyId: config.keys.aws.key
   secretAccessKey: config.keys.aws.keySecret
 )
+# ensures sqs defined in module scope
+sqs = null
 
 # tweets are saved to dynamo in batches which are pulled from this queue
 tweetsQueue = []
 
 # aws errors when rate limit exceed so delay is 10 seconds
-saveTweetDelay =
+timeout =
   error: 10000
   standard: 1000
 
@@ -25,7 +28,7 @@ formatTweetsForDB = (tweets) ->
   # boss ass functional-style function to format tweets for our dynamoDB table
   _.chain(tweets).filter((t) ->
     # remove tweets that don't have required db indices: id_str and timestamp_ms.
-    t.id_str? and t.timestamp?
+    t.id_str? and t.timestamp_ms?
   ).map((t) ->
     # adjust key names
     t.id = t.id_str
@@ -40,33 +43,57 @@ formatTweetsForDB = (tweets) ->
     ).invert().omit([null, ""]).invert().value()
   ).value()
 
-saveTweets = ->
+batchProcessTweets = ->
   # wait until num of tweets in queue exceeds dynamo's maximum batch size
   if tweetsQueue.length < 25
-    setTimeout saveTweets, saveTweetDelay.standard
+    setTimeout batchProcessTweets, timeout.standard
     return
 
-  batches = []
+  sublists = (list, size) ->
+    list = list.slice(0)
+    subs = []
+    subs.push list.splice(0,size) while list.length > 0
+    return subs
 
-  # split tweets into batches of 25 for bulk writing to dynamo 
-  batches.push tweetsQueue.splice(0, 25) while tweetsQueue.length > 25
+  # dynamo max batch size is 25
+  queueBatches = sublists(tweetsQueue, 10)
+
+  # sqs max batch size is 10
+  uploadBatches = sublists(tweetsQueue, 25)
+
+  # reset tweetsQueue
+  tweetsQueue = []
   
-  # async batch write to dynamo
-  upload = (batch, callback) ->
-    console.log "batch size: ", batch.length
-    ###
-    db.batchWriteItem
-      {'tweets': formatTweetsForDB(batch)}, {},
-      (err, res) -> callback(err)
-    ###
-        
-  async.map batches, upload, (err, results) ->
-    if err then console.log "error: ", err
-    
-    # after uploads finish, reset saveTweets timeout
-    # TODO empty queue before saving tweets
-    setTimeout saveTweets, (if err then saveTweetDelay.error else saveTweetDelay.standard)
-  return
+  # async send tweet batches to sqs
+  enqueue = (callback) ->
+    async.map queueBatches,
+      (batch, mapCallback) ->
+        console.log "sqs batch size: ", batch.length
+        sqs.sendMessageBatch
+          QueueUrl: config.urls.sqs.tweetMap
+          Entries: (
+            Id: tweet.id.toString()
+            MessageBody: tweet.text
+          ) for tweet in batch,
+          (err, data) -> mapCallback(err)
+      (err, _) -> callback(err)
+
+  # async batch write tweets to dynamo
+  upload = (callback) ->
+    async.map uploadBatches,
+      (batch, mapCallback) ->
+        console.log "dynamo batch size: ", batch.length
+        db.batchWriteItem {'tweets': formatTweetsForDB(batch)}, {},
+          (err, _) -> mapCallback(err)
+      (err, _) -> callback(err)
+
+  async.parallel [upload, enqueue],
+    (err, _) ->
+      console.log err, err.stack if err
+      console.log "async success" unless err
+      # after uploads finish, reset batchProcessTweets timeout
+      setTimeout batchProcessTweets,
+        (if err then timeout.error else timeout.standard)
 
 module.exports = (app) ->
   
@@ -78,11 +105,12 @@ module.exports = (app) ->
     access_token: config.keys.twitter.token
     access_token_secret: config.keys.twitter.tokenSecret
   )
+
+  sqs = new (app.get "aws").SQS()
   
   # filter on the whole world;
   filter = locations: ["-180", -"90", "180", "90"]
   
-  #var filter = { track: 'will' };
   twitter =
     stream: twit.stream("statuses/filter", filter)
     socket: null
@@ -91,9 +119,10 @@ module.exports = (app) ->
       # short circuit
       return unless twitter.socket?
       twitter.stream.on "tweet", (tweet) ->
-        #if (config.env == 'dev') console.log('tweet', tweet);
-        # TODO uncomment 
-        # tweetsQueue.push tweet if tweet.coordinates?
+        # if (config.env == 'dev') console.log('tweet', tweet);
+        tweetsQueue.push tweet if tweet.coordinates?
+
+        ###
         # TODO remove emit
         if tweet.coordinates?
           twitter.socket.emit 'tweet',
@@ -101,6 +130,7 @@ module.exports = (app) ->
             lng     : tweet.coordinates.coordinates[1]
             title   : tweet.text
             id      : tweet.id
+        ###
 
     updateFilter: (words) ->
       # short circuit
@@ -127,14 +157,14 @@ module.exports = (app) ->
   app.get("io").sockets.on "connection", (socket) ->
     console.log "socket connected"
     
-    # begin calling saveTweets() at regular intervals if dev env
-    # setTimeout saveTweets, saveTweetDelay.standard if config.env is "dev"
-    
     # set socket object on twitter object
     twitter.socket = socket
     
     # start listening for tweets on twitter stream
     twitter.listenForTweets()
+
+    # begin calling batchProcessTweets() at regular intervals if dev env
+    setTimeout batchProcessTweets, timeout.standard if config.env is "dev"
     return
 
   app.set "twitter", twitter

@@ -5,11 +5,18 @@ Main application file
 
 # set default node env to dev
 process.env.NODE_ENV = process.env.NODE_ENV or "prod"
-cluster = require("cluster")
-config = require("./config/env")
-_ = require("underscore")
+cluster = require "cluster"
+config = require "./config/env"
+_ = require "underscore"
 
-# ... cluster management ... //
+aws = require "aws-sdk"
+_.extend aws.config,
+  region: "us-east-1"
+  accessKeyId: config.keys.aws.key
+  secretAccessKey: config.keys.aws.keySecret
+
+
+# ... master manages cluster workers and handles incoming requests ... //
 if cluster.isMaster
   
   workers = {}
@@ -20,7 +27,7 @@ if cluster.isMaster
     worker
 
   # spawn 1 worker per available cpu
-  spawn for cpu in [1..cpus-1]
+  spawn() for cpu in [1..cpus-1]
   
   # respawn worker on death
   cluster.on "death", (worker) ->
@@ -39,30 +46,25 @@ if cluster.isMaster
   # setup web socket
   io = require("socket.io").listen(server)
   app.set "io", io
+
+  # we want the configured-aws object to be a singleton
+  app.set "aws", aws
+ 
+  # setup server services and start listening
   require("./tweets") app
-  
-  # start server 
   require("./routes") app
   server.listen config.port, ->
-    console.log "server listening on %d, in %s mode", config.port, app.get("env")
-    return
+    console.log "listening on %d, in %s mode", config.port, app.get("env")
   
   # expose app
   exports = module.exports = app
 
 
-# ... worker process ... //
-###
+# ... worker processes pull tweets from queue, analyze sentiment, then publish ... //
 else
 
   console.log "worker process started"
   
-  aws = require("aws-sdk")
-  _.extend aws.config,
-    region: "us-east-1"
-    accessKeyId: config.keys.aws.key
-    secretAccessKey: config.keys.aws.keySecret
-
   sqs = new aws.SQS()
   sns = new aws.SNS()
   
@@ -83,11 +85,10 @@ else
         pollSqs()
         return
 
-      console.log "success. num message: ", data.Messages.length
+      console.log "num messages: ", data.Messages.length
       
-      # foreach message received ...
       for msg in data.Messages
-        console.log "msg: ", msg
+        console.log "msg.Body: ", msg.Body
         
         # TODO get sentiment from alchemy api
         
@@ -95,11 +96,7 @@ else
           QueueUrl: config.urls.sqs.tweetMap
           ReceiptHandle: msg.ReceiptHandle
           (err, data) ->
-            if err
-              console.log "error deleting sqs msg ", err, err.stack
-              return
-
+            console.log "error deleting sqs msg ", err, err.stack if err
             # TODO should be moved inside alchemy api callback
             pollSqs()
   )()
-###
