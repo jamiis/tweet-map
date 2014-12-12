@@ -94,7 +94,6 @@ batchProcessTweets = ->
   async.parallel [upload, enqueue],
     (err, _) ->
       console.log err, err.stack if err
-      console.log "async success" unless err
       # after uploads finish, reset batchProcessTweets timeout
       setTimeout batchProcessTweets,
         (if err then timeout.error else timeout.standard)
@@ -113,7 +112,9 @@ module.exports = (app) ->
   sqs = new (app.get "aws").SQS()
   
   # filter on the whole world;
-  filter = locations: ["-180", -"90", "180", "90"]
+  filter =
+    locations: ["-180", -"90", "180", "90"]
+    language: "en"
   
   twitter =
     stream: twit.stream("statuses/filter", filter)
@@ -123,7 +124,6 @@ module.exports = (app) ->
       # short circuit
       return unless twitter.socket?
       twitter.stream.on "tweet", (tweet) ->
-        # if (config.env == 'dev') console.log('tweet', tweet);
         tweetsQueue.push tweet if tweet.coordinates?
 
     updateFilter: (words) ->

@@ -8,6 +8,7 @@ process.env.NODE_ENV = process.env.NODE_ENV or "prod"
 cluster = require "cluster"
 config = require "./config/env"
 http = require "http"
+alchemy = new (require "alchemy-api") config.keys.alchemy.key
 _ = require "underscore"
 
 aws = require "aws-sdk"
@@ -66,6 +67,8 @@ else
 
   console.log "worker process started"
 
+  async = require "async"
+
   sqs = new aws.SQS()
   sns = new aws.SNS()
 
@@ -86,34 +89,56 @@ else
         return
 
       for msg in data.Messages
-        console.log "msg.Body: ", msg.Body
+        tweet = JSON.parse msg.Body
+        # console.log "tweet.text: ", tweet.text
         
-        # TODO get sentiment from alchemy api
-        
-        # TODO put in alchemy callback
-        if config.env isnt "dev"
-          # use sns only in prod env
-          sns.sendMessage
-            Message: "testies"
-            TopicArn: config.urls.sns.tweetsWithSentiment
-          (err, data) -> if err then console.log err
-        else
-          payload = msg.Body
-          opts =
-            path: '/receive', port: 3000, method: 'POST'
-            headers:
-              'Content-Type': 'application/json'
-              'Content-Length': Buffer.byteLength payload
-          req = http.request opts, ->
-          req.on "error", (err) -> console.log err
-          req.end payload
+        # sends tweets to server http endpoint '/receive'
+        send = (callback) ->
+          sendTweet = (tweet) ->
+            console.log "sendTweet tweet.text: ", tweet.text
 
-        # remove tweet from queue
-        sqs.deleteMessage
-          QueueUrl: config.urls.sqs.tweetMap
-          ReceiptHandle: msg.ReceiptHandle
-          (err, data) ->
+            # use sns if production env
+            if config.env isnt "dev"
+              sns.sendMessage
+                Message: JSON.stringify tweet
+                TopicArn: config.urls.sns.tweetsWithSentiment
+              (err, data) -> callback(err)
+
+            # otherwise send to localhost:3000/receive
+            else
+              payload = JSON.stringify tweet
+              opts =
+                path: '/receive', port: 3000, method: 'POST'
+                headers:
+                  'Content-Type': 'application/json'
+                  'Content-Length': Buffer.byteLength payload
+              req = http.request opts, -> callback null
+              req.on "error", (err) -> callback err
+              req.end payload
+
+          # get tweet sentiment for 1% of tweets
+          if Math.random() < 0.1
+            alchemy.sentiment tweet.text, {}, (err, res) ->
+              if err
+                callback err
+                return
+              console.log res.statusInfo if res.status is "ERROR"
+              tweet.sentiment = res.docSentiment
+              console.log "\nSENTIMENT: ", tweet.sentiment
+              sendTweet(tweet)
+          else
+            sendTweet(tweet)
+
+        # removes tweet from sqs queue
+        remove = (callback) ->
+          sqs.deleteMessage
+            QueueUrl: config.urls.sqs.tweetMap
+            ReceiptHandle: msg.ReceiptHandle
+            (err, data) -> callback err
+
+        async.parallel [send, remove],
+          (err, _) ->
             console.log err, err.stack if err
-            # TODO should be moved inside alchemy api callback
+            # continue polling sqs queue
             pollSqs()
   )()

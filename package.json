@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/jamiis/tweet-map",
   "dependencies": {
+    "alchemy-api": "^1.1.0",
     "async": "^0.9.0",
     "aws-sdk": "^2.0.31",
     "aws-snsclient": "^0.2.0",

@@ -37,8 +37,9 @@ module.exports = (app) ->
     if config.env isnt "dev" then snsClient
     else (req, res) ->
       tweet = req.body
-      console.log tweet
+      #console.log tweet
       app.get("io").emit "tweet", tweet
+      res.sendStatus 200
     )
 
   # all undefined asset or api routes should return a 404
