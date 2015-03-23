@@ -55,10 +55,10 @@ batchProcessTweets = ->
     subs.push list.splice(0,size) while list.length > 0
     return subs
 
-  # dynamo max batch size is 25
+  # sqs max batch size is 10
   queueBatches = sublists(tweetsQueue, 10)
 
-  # sqs max batch size is 10
+  # dynamo max batch size is 25
   uploadBatches = sublists(tweetsQueue, 25)
 
   # reset tweetsQueue

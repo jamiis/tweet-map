@@ -126,20 +126,28 @@ this.initMap = ->
   socket = io.connect()
   socket.on "tweet", (tweet) ->
     
+    console.log tweet
+
     # add tweet location to heatmap layer
     loc = new google.maps.LatLng(tweet.lng, tweet.lat)
     tweets.push loc
     
-    # display dot on the map for 500ms
-    marker = new google.maps.Marker(
+    # display an icon on the map
+    icon = "img/dot.png"
+    time = 500
+
+    if tweet.sentiment?
+      time = 3500
+      switch tweet.sentiment.type
+        when "positive" then icon = "img/positive.png"
+        when "negative" then icon = "img/negative.png"
+
+    marker = new google.maps.Marker
       position: loc
       map: map
-      icon: "img/dot.png"
-    )
-    setTimeout (->
-      marker.setMap null
-      return
-    ), 500
+      icon: icon
+
+    setTimeout (-> marker.setMap null), time
     return
 
   document.getElementById("filter").addEventListener "keydown", ((ev) ->

@@ -8,6 +8,7 @@ process.env.NODE_ENV = process.env.NODE_ENV or "prod"
 cluster = require "cluster"
 config = require "./config/env"
 http = require "http"
+http.globalAgent.maxSockets = Infinity
 alchemy = new (require "alchemy-api") config.keys.alchemy.key
 _ = require "underscore"
 
@@ -35,7 +36,7 @@ if cluster.isMaster
   cluster.on "death", (worker) ->
     console.log "worker " + worker.pid + " died. spawning a new process..."
     delete workers[worker.pid]
-    spawn
+    spawn()
   
   # ... server setup ... //
   express = require("express")
@@ -53,8 +54,8 @@ if cluster.isMaster
   app.set "aws", aws
  
   # setup server services and start listening
-  require("./tweets") app
   require("./routes") app
+  require("./tweets") app
   server.listen config.port, ->
     console.log "listening on %d, in %s mode", config.port, app.get("env")
   
@@ -95,39 +96,40 @@ else
         # sends tweets to server http endpoint '/receive'
         send = (callback) ->
           sendTweet = (tweet) ->
-            console.log "sendTweet tweet.text: ", tweet.text
-
             # use sns if production env
             if config.env isnt "dev"
               sns.sendMessage
                 Message: JSON.stringify tweet
                 TopicArn: config.urls.sns.tweetsWithSentiment
-              (err, data) -> callback(err)
+                (err, data) -> callback(err)
 
             # otherwise send to localhost:3000/receive
             else
+              console.log "sendTweet tweet.text: ", tweet.text
               payload = JSON.stringify tweet
               opts =
                 path: '/receive', port: 3000, method: 'POST'
                 headers:
                   'Content-Type': 'application/json'
                   'Content-Length': Buffer.byteLength payload
-              req = http.request opts, -> callback null
-              req.on "error", (err) -> callback err
+              req = http.request opts, ->
               req.end payload
+              # note: no error handling. simply continue executing
+              callback null
 
           # get tweet sentiment for 1% of tweets
-          if Math.random() < 0.1
+          if Math.random() < 0.05
             alchemy.sentiment tweet.text, {}, (err, res) ->
               if err
                 callback err
-                return
-              console.log res.statusInfo if res.status is "ERROR"
-              tweet.sentiment = res.docSentiment
-              console.log "\nSENTIMENT: ", tweet.sentiment
-              sendTweet(tweet)
+              else if res.status is "ERROR"
+                callback("Error processing sentiment:" + res.statusInfo)
+              else
+                tweet.sentiment = res.docSentiment
+                console.log "\nSENTIMENT: ", tweet.sentiment
+                sendTweet tweet
           else
-            sendTweet(tweet)
+            sendTweet tweet
 
         # removes tweet from sqs queue
         remove = (callback) ->
@@ -138,7 +140,9 @@ else
 
         async.parallel [send, remove],
           (err, _) ->
-            console.log err, err.stack if err
+            console.log err if err
             # continue polling sqs queue
             pollSqs()
+
+        return
   )()

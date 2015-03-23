@@ -13,7 +13,6 @@ module.exports = (app) ->
 
   # config middleware
   app.use bodyParser.json()
-  app.use bodyParser.urlencoded extended:true
 
   # partials
   app.get "/partials/:name", (req, res) ->
@@ -23,7 +22,7 @@ module.exports = (app) ->
   app.use "/css", express.static(app.get("appPath") + "/app/css/")
   app.use "/js", express.static(app.get("appPath") + "/app/js/")
   app.use "/img", express.static(app.get("appPath") + "/app/img/")
-  
+
   # update twitter stream word filter
   app.route("/filter/:words").post (req, res) ->
     app.get("twitter").updateFilter req.params.words
@@ -35,12 +34,11 @@ module.exports = (app) ->
   app.route("/receive").post(
     # use sns in production dev
     if config.env isnt "dev" then snsClient
-    else (req, res) ->
+    else (req, res, next) ->
       tweet = req.body
-      #console.log tweet
+      console.log "emitting ", tweet
       app.get("io").emit "tweet", tweet
-      res.sendStatus 200
-    )
+      res.sendStatus 200)
 
   # all undefined asset or api routes should return a 404
   app.route("/:url(api|auth|components|app|bower_components|assets)/*").get errors[404]
