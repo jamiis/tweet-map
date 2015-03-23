@@ -1,15 +1,8 @@
-Jamis Johnson (jmj2180@columbia.edu) and
-Nick DeGiacomo (ndd2122@columbia.edu)
-
-Cloud Computing and Big Data,
-Columbia University,
-October 30, 2014
-
-A tweet map using AWS dynamoDB, elastic beanstalk and elb, 
+A live tweet map using AWS dynamoDB, elastic beanstalk and elb, 
 the google maps javascript API, node and express, 
 and web sockets.
 
-Deployed: [twitter-map-prod.elasticbeanstalk.com](http://twitter-map-prod.elasticbeanstalk.com)
+It was deployed for a time on AWS but currently not live.
 
 ###Screenshots
 
